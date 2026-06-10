@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anavsan - Data Warehouse Optimization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --color-primary: #6932D5;
+        --color-primary-hover: #5A28BE;
+        --color-background: #F4F1F9;
+        --color-sidebar-topbar: #150A2B;
+        --color-surface: #FFFFFF;
+        --color-surface-hover: #F1EDF9;
+        --color-surface-nested: #F9F7FE;
+        --color-border-color: #E2DDEB;
+        --color-border-light: #EAE6F2;
+        --color-text-primary: #1E1E2D;
+        --color-text-secondary: #5A5A72;
+        --color-text-muted: #9A9AB2;
+        --color-text-strong: #161616;
+        --color-link: #0F62FE;
+        --color-input-bg: #FFFFFF;
+        --color-table-header-bg: #E0DEE5;
+        --color-status-success: #16A34A;
+        --color-status-success-light: #D1FAE5;
+        --color-status-success-dark: #059669;
+        --color-status-warning: #F59E0B;
+        --color-status-warning-light: #FEF3C7;
+        --color-status-warning-dark: #92400E;
+        --color-status-error: #DC2626;
+        --color-status-error-light: #FEE2E2;
+        --color-status-error-dark: #991B1B;
+        --color-status-info: #2563EB;
+        --color-status-info-light: #DBEAFE;
+        --color-status-info-dark: #1E40AF;
+        --color-status-paused: #06B6D4;
+        --color-status-paused-light: #CFFAFE;
+        --color-status-paused-dark: #0E7490;
+        --color-button-secondary-bg: #F0EAFB;
+        --color-button-secondary-bg-hover: #E2DDEB;
+      }
+      .dark {
+        --color-primary: #8B5CF6;
+        --color-primary-hover: #7C3AED;
+        --color-background: #111827;
+        --color-sidebar-topbar: #1F2937;
+        --color-surface: #1F2937;
+        --color-surface-hover: #374151;
+        --color-surface-nested: #1a222f;
+        --color-border-color: #374151;
+        --color-border-light: #4B5563;
+        --color-text-primary: #F3F4F6;
+        --color-text-secondary: #9CA3AF;
+        --color-text-muted: #6B7280;
+        --color-text-strong: #FFFFFF;
+        --color-link: #60A5FA;
+        --color-input-bg: #374151;
+        --color-table-header-bg: #374151;
+        --color-status-success: #22C55E;
+        --color-status-success-light: #1F2937;
+        --color-status-success-dark: #4ADE80;
+        --color-status-warning: #FBBF24;
+        --color-status-warning-light: #1F2937;
+        --color-status-warning-dark: #FACC15;
+        --color-status-error: #F87171;
+        --color-status-error-light: #1F2937;
+        --color-status-error-dark: #FCA5A5;
+        --color-status-info: #60A5FA;
+        --color-status-info-light: #1F2937;
+        --color-status-info-dark: #93C5FD;
+        --color-status-paused: #22D3EE;
+        --color-status-paused-light: #1F2937;
+        --color-status-paused-dark: #67E8F9;
+        --color-button-secondary-bg: #374151;
+        --color-button-secondary-bg-hover: #4B5563;
+      }
+       .theme-gray-10 {
+        --color-primary: #6932D5;
+        --color-primary-hover: #5A28BE;
+        --color-background: #f3f4f6;
+        --color-sidebar-topbar: #1F2937;
+        --color-surface: #FFFFFF;
+        --color-surface-hover: #F1EDF9;
+        --color-surface-nested: #F9F7FE;
+        --color-border-color: #E2DDEB;
+        --color-border-light: #EAE6F2;
+        --color-text-primary: #1E1E2D;
+        --color-text-secondary: #5A5A72;
+        --color-text-muted: #9A9AB2;
+        --color-text-strong: #161616;
+        --color-link: #0F62FE;
+        --color-input-bg: #FFFFFF;
+        --color-table-header-bg: #E0DEE5;
+        --color-status-success: #16A34A;
+        --color-status-success-light: #D1FAE5;
+        --color-status-success-dark: #059669;
+        --color-status-warning: #F59E0B;
+        --color-status-warning-light: #FEF3C7;
+        --color-status-warning-dark: #92400E;
+        --color-status-error: #DC2626;
+        --color-status-error-light: #FEE2E2;
+        --color-status-error-dark: #991B1B;
+        --color-status-info: #2563EB;
+        --color-status-info-light: #DBEAFE;
+        --color-status-info-dark: #1E40AF;
+        --color-status-paused: #06B6D4;
+        --color-status-paused-light: #CFFAFE;
+        --color-status-paused-dark: #0E7490;
+        --color-button-secondary-bg: #F0EAFB;
+        --color-button-secondary-bg-hover: #E2DDEB;
+      }
+      .theme-black {
+        --color-primary: #8B5CF6;
+        --color-primary-hover: #7C3AED;
+        --color-background: #000000;
+        --color-sidebar-topbar: #111111;
+        --color-surface: #111111;
+        --color-surface-hover: #222222;
+        --color-surface-nested: #0a0a0a;
+        --color-border-color: #222222;
+        --color-border-light: #333333;
+        --color-text-primary: #F3F4F6;
+        --color-text-secondary: #9CA3AF;
+        --color-text-muted: #6B7280;
+        --color-text-strong: #FFFFFF;
+        --color-link: #60A5FA;
+        --color-input-bg: #1F1F1F;
+        --color-table-header-bg: #1F1F1F;
+        --color-status-success: #22C55E;
+        --color-status-success-light: #111111;
+        --color-status-success-dark: #4ADE80;
+        --color-status-warning: #FBBF24;
+        --color-status-warning-light: #111111;
+        --color-status-warning-dark: #FACC15;
+        --color-status-error: #F87171;
+        --color-status-error-light: #111111;
+        --color-status-error-dark: #FCA5A5;
+        --color-status-info: #60A5FA;
+        --color-status-info-light: #111111;
+        --color-status-info-dark: #93C5FD;
+        --color-status-paused: #22D3EE;
+        --color-status-paused-light: #111111;
+        --color-status-paused-dark: #67E8F9;
+        --color-button-secondary-bg: #222222;
+        --color-button-secondary-bg-hover: #333333;
+      }
+
+      /* No scrollbar utility */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Custom Anavsan Scrollbar */
+      /* For Webkit browsers like Chrome, Safari, Edge */
+      ::-webkit-scrollbar {
+        width: 8px; /* Width of the vertical scrollbar */
+        height: 8px; /* Height of the horizontal scrollbar */
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent; /* Makes the track invisible */
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--color-text-muted); /* The draggable scrolling handle */
+        border-radius: 4px; /* Rounded corners */
+        border: 2px solid transparent; /* Creates padding around the thumb */
+        background-clip: content-box; /* The background is clipped to the content box */
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-text-secondary); /* Color on hover */
+      }
+
+      /* Custom Thin Chat Scrollbar */
+      .chat-custom-scroll::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
+      }
+      .chat-custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .chat-custom-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(105, 50, 213, 0.12);
+        border-radius: 2px;
+        border: none;
+        background-clip: normal;
+      }
+      .chat-custom-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(105, 50, 213, 0.25);
+      }
+      .dark .chat-custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      /* For Firefox */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-text-muted) transparent;
+      }
+
+      /* Splash Loader Styles */
+      #static-splash-loader, #react-splash-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--color-background, #F4F1F9);
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+      }
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes fade-in {
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .splash-bg {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 340px;
+        background: transparent;
+      }
+      .ring-wrap {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        animation: fade-in 0.6s ease both;
+      }
+      .ring-rotate {
+        position: absolute;
+        top: 0; left: 0;
+        width: 120px; height: 120px;
+        animation: rotate 1.8s linear infinite;
+        transform-origin: 60px 60px;
+      }
+      .logo-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-name {
+        margin-top: 20px;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        color: var(--color-text-secondary, #5A5A72);
+        animation: fade-in 0.9s ease 0.3s both;
+        text-transform: uppercase;
+      }
+      .brand-sub {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--color-text-muted, #9A9AB2);
+        animation: fade-in 1s ease 0.5s both;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            animation: {
+              'gradient-x': 'gradient-x 3s ease infinite',
+              'spin-slow': 'spin 12s linear infinite',
+              'reverse-spin-slow': 'reverse-spin 15s linear infinite',
+            },
+            keyframes: {
+              'gradient-x': {
+                '0%, 100%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'left center',
+                },
+                '50%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'right center',
+                },
+              },
+              'reverse-spin': {
+                from: {
+                  transform: 'rotate(360deg)',
+                },
+                to: {
+                  transform: 'rotate(0deg)',
+                },
+              },
+            },
+            colors: {
+              'primary': 'var(--color-primary)',
+              'primary-hover': 'var(--color-primary-hover)',
+              'background': 'var(--color-background)',
+              'sidebar-topbar': 'var(--color-sidebar-topbar)',
+              'surface': 'var(--color-surface)',
+              'surface-hover': 'var(--color-surface-hover)',
+              'surface-nested': 'var(--color-surface-nested)',
+              'border-color': 'var(--color-border-color)',
+              'border-light': 'var(--color-border-light)',
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'text-muted': 'var(--color-text-muted)',
+              'text-strong': 'var(--color-text-strong)',
+              'link': 'var(--color-link)',
+              'input-bg': 'var(--color-input-bg)',
+              'table-header-bg': 'var(--color-table-header-bg)',
+              'status-success': { DEFAULT: 'var(--color-status-success)', light: 'var(--color-status-success-light)', dark: 'var(--color-status-success-dark)' },
+              'status-warning': { DEFAULT: 'var(--color-status-warning)', light: 'var(--color-status-warning-light)', dark: 'var(--color-status-warning-dark)' },
+              'status-error':   { DEFAULT: 'var(--color-status-error)', light: 'var(--color-status-error-light)', dark: 'var(--color-status-error-dark)' },
+              'status-info':    { DEFAULT: 'var(--color-status-info)', light: 'var(--color-status-info-light)', dark: 'var(--color-status-info-dark)' },
+              'status-paused':  { DEFAULT: 'var(--color-status-paused)', light: 'var(--color-status-paused-light)', dark: 'var(--color-status-paused-dark)' },
+              'button-secondary-bg': 'var(--color-button-secondary-bg)',
+              'button-secondary-bg-hover': 'var(--color-button-secondary-bg-hover)',
+            }
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "recharts": "https://aistudiocdn.com/recharts@^3.1.2",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "diff": "https://aistudiocdn.com/diff@^8.0.2",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background text-text-primary h-screen overflow-hidden">
+    <div id="static-splash-loader">
+      <div class="splash-bg">
+        <div class="ring-wrap">
+          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="60" r="52" fill="white"/>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#6932D5" stroke-opacity="0.15" stroke-width="3.5"/>
+          </svg>
+          <svg class="ring-rotate" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="arc-spin" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6932D5" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#F9AB8F" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="52" fill="none"
+              stroke="url(#arc-spin)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              stroke-dasharray="180 146"
+              stroke-dashoffset="0"
+            />
+          </svg>
+          <div class="logo-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="31" viewBox="0 0 19 21" fill="none">
+              <defs>
+                <linearGradient id="logo-grad" x1="9.18333" y1="0.465281" x2="9.18333" y2="19.8867" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#6932D5"/>
+                  <stop offset="1" stop-color="#7163C6"/>
+                </linearGradient>
+                <linearGradient id="logo-stroke" x1="9.18337" y1="0.249878" x2="9.18337" y2="20.102" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#6932D5"/>
+                  <stop offset="1" stop-color="#7163C6"/>
+                </linearGradient>
+              </defs>
+              <path d="M9.96971 0.291213C10.1557 0.227878 10.3588 0.229089 10.5152 0.35317C10.673 0.478492 10.7217 0.679763 10.7017 0.8779C10.6805 1.08829 10.6467 1.29834 10.6169 1.49747C10.5868 1.69951 10.5601 1.89364 10.5497 2.08626C10.4994 3.04108 10.4365 3.98391 10.445 4.92612L10.4512 5.30294C10.4936 7.0595 10.727 8.79837 11.0806 10.5258L11.1583 10.8959L11.1678 10.9321C11.1709 10.9411 11.1735 10.9467 11.1753 10.9498C11.177 10.9505 11.1797 10.951 11.1832 10.9519C11.1958 10.9554 11.2162 10.9593 11.2492 10.9616C12.0845 11.02 12.9217 11.1456 13.726 11.4564L13.7983 11.4872C13.8684 11.5199 13.9329 11.5576 13.9914 11.5938C14.0768 11.6466 14.1363 11.6874 14.21 11.7304L14.3732 11.8257L14.2507 12.119L14.1801 12.2867L14.0052 12.2442C13.1529 12.0376 12.2781 11.9419 11.4021 11.9575C11.4762 12.2496 11.5459 12.5278 11.6252 12.8068C12.0621 14.3404 12.5589 15.8303 13.3708 17.1855L13.5116 17.4144C13.8451 17.9402 14.2186 18.4065 14.7297 18.7361L14.8501 18.8094C15.4516 19.1545 16.053 19.1881 16.6564 18.8322C17.307 18.4485 17.5982 17.8623 17.5658 17.094L17.5654 17.0898V17.0856C17.5653 17.0536 17.5668 17.0214 17.5699 16.9895L17.5874 16.8138L17.7606 16.7961L17.835 16.7889L18.0543 16.7665L18.0684 16.9895C18.0757 17.1047 18.0908 17.2056 18.1037 17.3393C18.1128 17.4323 18.1198 17.533 18.1154 17.6365L18.1067 17.741C17.8774 19.5974 16.0431 20.5876 14.2918 19.8644C13.4636 19.5218 12.8327 18.9474 12.3152 18.2636L12.213 18.1254C11.4848 17.1149 10.977 15.9996 10.56 14.8552L10.3864 14.3629C10.2574 13.9836 10.1394 13.6014 10.0258 13.2195L9.6918 12.0768C9.68772 12.0629 9.68389 12.0513 9.68057 12.0414C8.12864 12.1811 6.65235 12.5376 5.29908 13.2826L5.02989 13.4369C4.03685 14.0292 3.34004 14.88 2.90418 15.9308L2.82067 16.1436C2.61672 16.6915 2.4282 17.2452 2.24531 17.8021L1.70401 19.4804C1.63121 19.706 1.51534 19.9027 1.3239 20.0123C1.15313 20.11 0.958512 20.118 0.756428 20.0696L0.669604 20.0456C0.540939 20.0053 0.389005 19.9426 0.306522 19.8012C0.219489 19.6518 0.248047 19.4852 0.291982 19.3464L0.698267 18.0558C0.836117 17.6242 0.979109 17.1928 1.13446 16.7665L1.42028 15.9923C2.76887 12.3857 4.32897 8.87157 6.23797 5.51956L6.65256 4.80351C7.3879 3.55416 8.21798 2.35671 9.00883 1.15649L9.06906 1.06967C9.21506 0.870028 9.39232 0.695093 9.55223 0.540304L9.55469 0.538617L9.6 0.497737C9.70894 0.405773 9.83448 0.336021 9.96971 0.291213ZM8.79741 3.88974C7.0649 6.60832 5.61728 9.42814 4.35275 12.3474C5.05163 11.9288 5.8119 11.6202 6.60726 11.4345L6.9828 11.3511C7.79033 11.1791 8.61053 11.0495 9.42427 10.9034C8.98207 8.63139 8.70016 6.30112 8.79741 3.88974Z" fill="url(#logo-grad)" stroke="url(#logo-stroke)" stroke-width="0.5"/>
+            </svg>
+          </div>
+        </div>
+        <p class="brand-name">Anavsan</p>
+        <p class="brand-sub">Loading…</p>
+      </div>
+    </div>
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

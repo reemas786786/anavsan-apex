@@ -1,0 +1,8 @@
+{
+  "name": "Anavsan Apex (10/6/2026)",
+  "description": "Anavsan is a cloud data warehouse optimization and insights platform designed to help teams monitor costs, storage, and performance, optimize queries, detect anomalies, and leverage AI-powered insights for better decision-making.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
