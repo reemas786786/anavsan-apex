@@ -80,7 +80,7 @@ const DirectiveCard: React.FC<{
                 </div>
 
                 <div className="text-[12px] font-bold text-[#6A38EB] dark:text-purple-400 flex items-center gap-1 mt-0.5 group-hover:translate-x-1 transition-all duration-200">
-                    <span>Ask Apex</span>
+                    <span>Ask APEX</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                 </div>
             </div>

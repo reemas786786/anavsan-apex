@@ -223,22 +223,19 @@ const ContextualSidebar: React.FC<ContextualSidebarProps> = ({ account, accounts
                         {isSidebarExpanded ? (
                             <>
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-[#5829D6]/10 to-[#7C3AED]/10 dark:from-[#5829D6]/30 dark:to-[#7C3AED]/30 text-[#5829D6] dark:text-[#C4B5FD] text-xs font-black flex items-center justify-center flex-shrink-0 border border-[#5829D6]/20 transition-transform group-hover:scale-105">
-                                        {account.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                                    </div>
                                     <div className="flex flex-col overflow-hidden leading-tight text-left">
                                         <span className="text-[12.5px] font-black text-slate-850 dark:text-white truncate group-hover:text-[#5829D6] transition-colors">
                                             {account.name}
                                         </span>
                                         <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">
-                                            {account.identifier || 'EVC54287'} • {account.role || 'ACCOUNTADMIN'}
+                                            {account.identifier ? account.identifier.toUpperCase() : 'EVC54287'}
                                         </span>
                                     </div>
                                 </div>
                                 <IconChevronDown className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${isAccountSwitcherOpen ? 'rotate-180 text-[#5829D6]' : 'group-hover:text-slate-600'}`} />
                             </>
                         ) : (
-                            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-[#5829D6]/10 to-[#7C3AED]/10 dark:from-[#5829D6]/20 dark:to-[#7C3AED]/20 text-[#5829D6] dark:text-[#C4B5FD] text-xs font-black flex items-center justify-center flex-shrink-0 border border-[#5829D6]/20 transition-transform group-hover:scale-105 shadow-sm">
+                            <div className="text-xs font-black text-[#5829D6] dark:text-[#C4B5FD] flex items-center justify-center">
                                 {account.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                             </div>
                         )}
@@ -263,17 +260,10 @@ const ContextualSidebar: React.FC<ContextualSidebarProps> = ({ account, accounts
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-2.5 overflow-hidden">
-                                                    <div className={`h-7 w-7 rounded-lg text-[10px] font-black flex items-center justify-center flex-shrink-0 transition-all ${
-                                                        isActive 
-                                                        ? 'bg-gradient-to-tr from-[#5829D6] to-[#7C3AED] text-white shadow-sm' 
-                                                        : 'bg-slate-100 dark:bg-[#111827] text-slate-550 dark:text-slate-400 group-hover:scale-105'
-                                                    }`}>
-                                                        {acc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                                                    </div>
                                                     <div className="flex flex-col overflow-hidden text-left">
                                                         <span className="truncate text-slate-800 dark:text-slate-200 text-xs">{acc.name}</span>
                                                         <span className="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wide">
-                                                            {acc.identifier || 'EVC54287'} • us-east-1
+                                                            {acc.identifier ? acc.identifier.toUpperCase() : 'EVC54287'}
                                                         </span>
                                                     </div>
                                                 </div>

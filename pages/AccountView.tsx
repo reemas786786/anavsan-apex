@@ -556,6 +556,8 @@ const AccountView: React.FC<AccountViewProps> = ({ account, accounts, onSwitchAc
                     onBackToSource={() => handleSidebarPageChange('Account overview')}
                     returnContext={null}
                     displayMode={displayMode}
+                    isAccountLevel={true}
+                    currentAccountName={account.name}
                 />;
             case 'Ask Apex':
                 return <AIAgent />;

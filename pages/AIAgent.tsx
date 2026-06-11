@@ -127,7 +127,7 @@ const HeaderSwitcher: React.FC<{ selectedAgent: 'general' | 'cortex'; onSelect: 
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-surface-hover transition-colors"
             >
-                <span className="text-lg font-bold text-text-strong">Ask Apex</span>
+                <span className="text-lg font-bold text-text-strong">Ask APEX</span>
                 <IconChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -213,14 +213,7 @@ const RecommendedActionCard: React.FC<{
     onNavigate?: (page: string) => void;
 }> = ({ recId, recTitle, affectedResource, accountName, severity, savings, userContext, onPromptClick, onNavigate }) => {
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-rose-200 dark:border-rose-900 shadow-[0_4px_16px_rgba(244,63,94,0.06)] p-5 space-y-4 max-w-2xl mt-4 select-none">
-            <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                <h4 className="text-[11px] font-black tracking-wider uppercase text-rose-600">
-                    RECOMMENDED NEXT ACTION (High Priority)
-                </h4>
-            </div>
-            
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-rose-200 dark:border-rose-900 shadow-[0_4px_16px_rgba(244,63,94,0.06)] p-4 max-w-2xl mt-4 select-none">
             <div className="bg-[#FFF8F8] dark:bg-[#1A1012] p-4 rounded-xl border border-rose-100 dark:border-rose-950 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-xs">
                 <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -460,7 +453,7 @@ const ChatMessage: React.FC<{ message: Message, onPromptClick: (prompt: string) 
             <div className={`flex flex-col gap-2 max-w-[80%] ${!isModel ? 'items-end' : 'items-start'}`}>
                 {isModel && (
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5 flex items-center gap-1.5 select-none">
-                        <span className="text-primary font-bold">Ask Apex</span>
+                        <span className="text-primary font-bold">APEX</span>
                         <span className="opacity-40">•</span>
                         <span>{message.timestamp}</span>
                     </div>
@@ -1006,7 +999,7 @@ const AIAgent: React.FC<AIAgentProps> = ({ onNavigate }) => {
             title: 'New Chat',
             messages: [{ 
                 role: 'model', 
-                text: 'Hello! I am Ask Apex. How can I help you analyze your data cloud today?',
+                text: 'Hello! I am APEX. How can I help you analyze your data cloud today?',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'})
             }],
         };
@@ -1260,7 +1253,7 @@ Act as "Apex." You are a highly skilled technical partner for data cloud managem
  
                                         <div className="flex flex-col justify-start">
                                             <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5 select-none pt-0.5">
-                                                <span className="text-primary font-bold">Ask Apex</span>
+                                                <span className="text-primary font-bold">APEX</span>
                                                 <span className="opacity-40">•</span>
                                                 <span className="text-[9.5px]">Thinking...</span>
                                             </div>

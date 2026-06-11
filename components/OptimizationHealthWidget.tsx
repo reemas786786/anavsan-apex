@@ -427,9 +427,9 @@ const OptimizationHealthWidget: React.FC<OptimizationHealthWidgetProps> = ({ onN
                                             e.stopPropagation();
                                             handleInsightsClick(row.accountName);
                                         }}
-                                        className="bg-transparent hover:bg-[#6A38EB]/5 text-[#6A38EB] border border-[#6A38EB]/20 hover:border-[#6A38EB]/50 text-[10px] font-black px-3.5 py-1.5 rounded-full transition-all uppercase tracking-wider hover:scale-[1.02] active:scale-[0.98] relative z-10"
+                                        className="text-[#5829D6] hover:text-[#4F46E5] hover:underline text-[13px] font-bold transition-all relative z-10 bg-transparent border-0 p-0 cursor-pointer outline-none"
                                     >
-                                        {row.insights} INSIGHTS
+                                        {row.insights} insights
                                     </button>
                                 </td>
                             </tr>

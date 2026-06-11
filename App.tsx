@@ -118,7 +118,7 @@ const App: React.FC = () => {
     return localStorage.getItem('anavsan_auth') === 'true';
   }); 
   
-  const [activePage, setActivePage] = useState<Page>('AI data cloud overview');
+  const [activePage, setActivePage] = useState<Page>('Ask Apex');
   const [activeSubPage, setActiveSubPage] = useState<string | undefined>();
   const [resourceSummaryTab, setResourceSummaryTab] = useState<string>('Accounts');
   const [recommendationFilters, setRecommendationFilters] = useState<any>(null);
@@ -499,7 +499,7 @@ const App: React.FC = () => {
           setIsAuthenticated(true);
           localStorage.setItem('anavsan_auth', 'true');
           localStorage.setItem('anavsan_user', JSON.stringify(user));
-          handleSetActivePage('AI data cloud overview');
+          handleSetActivePage('Ask Apex');
           setLoading(false);
       }, 1000);
   };

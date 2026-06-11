@@ -180,6 +180,7 @@ const RobustRecommendationCard: React.FC<{
     getStatusTextBadgeCustom: (status: string) => React.ReactNode;
     displayMode: 'cost' | 'credits';
     onToggleStatus?: (rec: Recommendation) => void;
+    hideAccountDetails?: boolean;
 }> = ({
     rec,
     onSelectRecommendation,
@@ -192,6 +193,7 @@ const RobustRecommendationCard: React.FC<{
     getStatusTextBadgeCustom,
     displayMode,
     onToggleStatus,
+    hideAccountDetails,
 }) => {
     const [coords, setCoords] = useState({ x: 0, y: 0 });
 
@@ -235,14 +237,16 @@ const RobustRecommendationCard: React.FC<{
                         <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-xs overflow-hidden pb-0.5">
                             {platform.icon}
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-800 leading-tight">
-                                {rec.accountName}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-semibold font-mono leading-none mt-0.5">
-                                {accountCode}
-                            </span>
-                        </div>
+                        {!hideAccountDetails && (
+                            <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-800 leading-tight">
+                                    {rec.accountName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-semibold font-mono leading-none mt-0.5">
+                                    {accountCode}
+                                </span>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="flex items-center gap-2">
@@ -332,7 +336,9 @@ const Recommendations: React.FC<{
     returnContext?: { account: Account; page: string; warehouse?: Warehouse | null } | null;
     displayMode?: 'cost' | 'credits';
     onNavigate?: (page: any) => void;
-}> = ({ accounts, currentUser, initialFilters, onNavigateToQuery, onNavigateToWarehouse, onAssignTask, onOptimizeRecommendation, selectedRecommendation, onSelectRecommendation, onPreviewQuery, onBackToSource, returnContext, displayMode = 'cost', onNavigate }) => {
+    isAccountLevel?: boolean;
+    currentAccountName?: string;
+}> = ({ accounts, currentUser, initialFilters, onNavigateToQuery, onNavigateToWarehouse, onAssignTask, onOptimizeRecommendation, selectedRecommendation, onSelectRecommendation, onPreviewQuery, onBackToSource, returnContext, displayMode = 'cost', onNavigate, isAccountLevel = false, currentAccountName }) => {
     
     const [data, setData] = useState<Recommendation[]>(() => {
         return initialData.map(rec => {
@@ -506,6 +512,10 @@ const Recommendations: React.FC<{
                 rec.accountName.toLowerCase().includes(searchLower)
             )) return false;
 
+            if (isAccountLevel && currentAccountName) {
+                if (rec.accountName !== currentAccountName) return false;
+            }
+
             if (resourceTypeFilter.length > 0 && !resourceTypeFilter.includes(rec.resourceType)) return false;
             if (accountFilter.length > 0 && !accountFilter.includes(rec.accountName)) return false;
             if (insightTypeFilter.length > 0 && !insightTypeFilter.includes(rec.insightType)) return false;
@@ -530,7 +540,7 @@ const Recommendations: React.FC<{
         }
 
         return filtered;
-    }, [data, search, resourceTypeFilter, accountFilter, insightTypeFilter, sortOption, isContextual, activeTab]);
+    }, [data, search, resourceTypeFilter, accountFilter, insightTypeFilter, sortOption, isContextual, activeTab, isAccountLevel, currentAccountName]);
 
     const handleUpdateStatus = (id: string, status: RecommendationStatus) => {
         setData(prev => prev.map(rec => rec.id === id ? { ...rec, status } : rec));
@@ -1111,25 +1121,27 @@ apex_pkg_context = {
             <div className="flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
                 <div className="flex items-center flex-wrap gap-3 text-xs w-full sm:w-auto">
                     {/* Account option with separate container */}
-                    <CustomFilterDropdown
-                        label="Account"
-                        value={accountFilter[0] || 'All'}
-                        icon={<Globe className="w-3.5 h-3.5" />}
-                        options={[
-                            { label: 'All', value: 'All' },
-                            { label: 'Finance Prod', value: 'Finance Prod' },
-                            { label: 'Marketing Dev', value: 'Marketing Dev' },
-                            { label: 'Data Science', value: 'Data Science' },
-                            { label: 'Analytics Core', value: 'Analytics Core' },
-                            { label: 'Supply Chain', value: 'Supply Chain' },
-                            ...accounts.filter(a => !['Finance Prod', 'Marketing Dev', 'Data Science', 'Analytics Core', 'Supply Chain'].includes(a.name)).map(acc => ({
-                                label: acc.name, value: acc.name
-                            }))
-                        ]}
-                        onChange={(val) => {
-                            setAccountFilter(val === 'All' ? [] : [val]);
-                        }}
-                    />
+                    {!isAccountLevel && (
+                        <CustomFilterDropdown
+                            label="Account"
+                            value={accountFilter[0] || 'All'}
+                            icon={<Globe className="w-3.5 h-3.5" />}
+                            options={[
+                                { label: 'All', value: 'All' },
+                                { label: 'Finance Prod', value: 'Finance Prod' },
+                                { label: 'Marketing Dev', value: 'Marketing Dev' },
+                                { label: 'Data Science', value: 'Data Science' },
+                                { label: 'Analytics Core', value: 'Analytics Core' },
+                                { label: 'Supply Chain', value: 'Supply Chain' },
+                                ...accounts.filter(a => !['Finance Prod', 'Marketing Dev', 'Data Science', 'Analytics Core', 'Supply Chain'].includes(a.name)).map(acc => ({
+                                    label: acc.name, value: acc.name
+                                }))
+                            ]}
+                            onChange={(val) => {
+                                setAccountFilter(val === 'All' ? [] : [val]);
+                            }}
+                        />
+                    )}
 
                     {/* Type option with separate container */}
                     <CustomFilterDropdown
@@ -1239,6 +1251,7 @@ apex_pkg_context = {
                                     getStatusTextBadgeCustom={getStatusTextBadgeCustom}
                                     displayMode={displayMode}
                                     onToggleStatus={handleToggleStatus}
+                                    hideAccountDetails={isAccountLevel}
                                 />
                             );
                         })}

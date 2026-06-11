@@ -246,15 +246,16 @@ export const accountNavItems = [
     {
         name: 'Ask Apex',
         icon: IconMessageSquare,
+        label: 'Ask APEX',
         children: []
     }
 ];
 
 export const NAV_ITEMS_TOP: NavItem[] = [
+    { name: 'Ask Apex', icon: IconMessageSquare, label: 'Ask APEX' },
     { name: 'AI data cloud overview', icon: IconDashboard },
     { name: 'Dashboards', icon: IconCloudOverview },
     { name: 'Enforcement Desk', icon: IconLightbulb },
-    { name: 'Ask Apex', icon: IconMessageSquare },
     { name: 'Operations', icon: IconBeaker },
     { name: 'Trigger', icon: IconBolt },
     { name: 'Integrations', icon: IconAdjustments, label: 'Tools' },
