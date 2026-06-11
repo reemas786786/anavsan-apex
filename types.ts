@@ -3,7 +3,7 @@ import React from 'react';
 
 export type Page = 
   | 'Intelligence overview'
-  | 'AI data cloud overview'
+  | 'Cost Intelligence'
   | 'Dashboards'
   | 'Accounts' 
   | 'Snowflake accounts'

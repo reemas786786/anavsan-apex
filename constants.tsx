@@ -188,8 +188,12 @@ export const IconCube: React.FC<{ className?: string }> = ({ className }) => <Bo
 export const accountNavItems = [
     {
         name: 'Account overview',
-        label: 'Consumption',
         icon: IconOverview,
+        children: []
+    },
+    {
+        name: 'Consumption',
+        icon: IconCloudOverview,
         children: []
     },
     {
@@ -253,7 +257,7 @@ export const accountNavItems = [
 
 export const NAV_ITEMS_TOP: NavItem[] = [
     { name: 'Ask Apex', icon: IconMessageSquare, label: 'Ask APEX' },
-    { name: 'AI data cloud overview', icon: IconDashboard },
+    { name: 'Cost Intelligence', icon: IconDashboard },
     { name: 'Dashboards', icon: IconCloudOverview },
     { name: 'Enforcement Desk', icon: IconLightbulb },
     { name: 'Operations', icon: IconBeaker },

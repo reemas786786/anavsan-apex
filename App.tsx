@@ -274,17 +274,17 @@ const App: React.FC = () => {
         setSidebarOpen(false);
         setReturnContext(null);
     } else {
-        handleSetActivePage('AI data cloud overview');
+        handleSetActivePage('Cost Intelligence');
     }
   };
 
   const breadcrumbItems = useMemo(() => {
     const homeItem: BreadcrumbItem = { 
         label: 'Home', 
-        onClick: () => handleSetActivePage('AI data cloud overview') 
+        onClick: () => handleSetActivePage('Cost Intelligence') 
     };
 
-    if (activePage === 'Intelligence overview' || activePage === 'AI data cloud overview') return [homeItem];
+    if (activePage === 'Intelligence overview' || activePage === 'Cost Intelligence') return [homeItem];
 
     const items = [homeItem];
 
@@ -750,7 +750,7 @@ const App: React.FC = () => {
     
     switch (activePage) {
         case 'Intelligence overview':
-        case 'AI data cloud overview': return <Overview onSelectAccount={handleSelectAccount} onSelectUser={setSelectedUser} accounts={accounts} users={users} onSetBigScreenWidget={setBigScreenWidget} currentUser={currentUser} onNavigate={handleSetActivePage} onAddAccountClick={() => setSidePanel({ type: 'addAccount' })} displayMode={displayMode} />;
+        case 'Cost Intelligence': return <Overview onSelectAccount={handleSelectAccount} onSelectUser={setSelectedUser} accounts={accounts} users={users} onSetBigScreenWidget={setBigScreenWidget} currentUser={currentUser} onNavigate={handleSetActivePage} onAddAccountClick={() => setSidePanel({ type: 'addAccount' })} displayMode={displayMode} />;
         case 'Resource summary': return <ResourceSummary initialTab={resourceSummaryTab} onSelectAccount={handleSelectAccount} onSelectApplication={handleSelectApplication} onNavigateToRecommendations={(filters) => handleSetActivePage('Enforcement Desk', undefined, { filters })} displayMode={displayMode} />;
         case 'Accounts': return <Connections accounts={accounts} onSelectAccount={handleSelectAccount} onAddAccountClick={() => setSidePanel({ type: 'addAccount' })} onDeleteAccount={(id) => setAccounts(a => a.filter(x => x.id !== id))} />;
         case 'AI agent':
@@ -813,7 +813,7 @@ const App: React.FC = () => {
             onEditDashboardClick={setEditingDashboard} 
             onViewDashboardClick={setSelectedDashboard} 
         />;
-        case 'Profile': return <ProfilePage user={currentUser!} initialSection={activeSubPage} onBack={() => handleSetActivePage('AI data cloud overview')} theme={theme} onThemeChange={(newTheme) => setTheme(newTheme as Theme)} displayMode={displayMode} onDisplayModeChange={setDisplayMode} />;
+        case 'Profile': return <ProfilePage user={currentUser!} initialSection={activeSubPage} onBack={() => handleSetActivePage('Cost Intelligence')} theme={theme} onThemeChange={(newTheme) => setTheme(newTheme as Theme)} displayMode={displayMode} onDisplayModeChange={setDisplayMode} />;
         default: return <Overview onSelectAccount={handleSelectAccount} onSelectUser={setSelectedUser} accounts={accounts} users={users} onSetBigScreenWidget={setBigScreenWidget} currentUser={currentUser} onNavigate={handleSetActivePage} onAddAccountClick={() => setSidePanel({ type: 'addAccount' })} />;
     }
   };
@@ -847,7 +847,7 @@ const App: React.FC = () => {
                  setSidebarPreference(newState);
             }
         }}
-        onLogoClick={() => handleSetActivePage('AI data cloud overview')}
+        onLogoClick={() => handleSetActivePage('Cost Intelligence')}
         isSidebarOpen={isSidebarOpen}
         brandLogo={null}
         onOpenProfile={() => handleSetActivePage('Profile')}

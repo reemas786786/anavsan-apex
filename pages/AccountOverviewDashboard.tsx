@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Account, Warehouse, QueryListItem } from '../types';
 import { queryListData } from '../data/dummyData';
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid, Cell } from 'recharts';
-import { Sparkles, Info, Calendar, ChevronDown, RefreshCw, Layers, Slack, Github, MessageSquare, Network, Clock, Shield, Tag, Search, X, Check, Server, Database, Boxes, Table, Cloud, Cpu, Edit3 } from 'lucide-react';
+import { Sparkles, Info, Calendar, ChevronDown, RefreshCw, Layers, Slack, Github, MessageSquare, Network, Clock, Shield, Tag, Search, X, Check, Server, Database, Boxes, Table, Cloud, Cpu, Edit3, ArrowUpDown, Maximize2 } from 'lucide-react';
 import { IconAIAgent, IconSparkles } from '../constants';
 import InfoTooltip from '../components/InfoTooltip';
 
@@ -13,6 +13,7 @@ interface AccountOverviewDashboardProps {
     onSelectWarehouse: (warehouse: Warehouse) => void;
     onSelectQuery: (query: QueryListItem) => void;
     displayMode?: 'cost' | 'credits';
+    activePageTab?: 'Account overview' | 'Consumption';
 }
 
 // category dataset lookup matching screenshot
@@ -169,7 +170,7 @@ const RESOURCES_LIST = [
 ];
 
 // --- MAIN DASHBOARD IMPLEMENTATION ---
-const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ account, onNavigate, onSelectWarehouse, onSelectQuery, displayMode }) => {
+const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ account, onNavigate, onSelectWarehouse, onSelectQuery, displayMode, activePageTab = 'Account overview' }) => {
     const isCost = displayMode === 'cost';
     
     // --- Snowflake Dynamic Filters State ---
@@ -191,6 +192,47 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
 
     // Dynamic table search input
     const [tableSearchText, setTableSearchText] = useState<string>('');
+    const [tableDropdownOpen, setTableDropdownOpen] = useState<'resource' | 'tag' | 'service' | 'object' | 'region' | null>(null);
+
+    // Optimization summary widget states
+    const [optimizationRange, setOptimizationRange] = useState<string>('Last 14 Days');
+    const [optimizationSort, setOptimizationSort] = useState<string>('Total spend');
+    const [optRangeDropdownOpen, setOptRangeDropdownOpen] = useState<boolean>(false);
+    const [optSortDropdownOpen, setOptSortDropdownOpen] = useState<boolean>(false);
+
+    // New Cost & Consumption Widget interactive states
+    const [budgetActivated, setBudgetActivated] = useState<boolean>(false);
+    const [budgetLimit, setBudgetLimit] = useState<number>(30);
+    const [aiTipMessage, setAiTipMessage] = useState<string | null>(null);
+    const [rolesExplanationOpen, setRolesExplanationOpen] = useState<boolean>(false);
+
+    const optimizationData = useMemo(() => {
+        if (optimizationRange === 'Last 7 Days') {
+            return {
+                totalSpend: '$5,480',
+                avgMonthly: '$1,150',
+                accounts: '3',
+                savings: '$11,210',
+                recsCount: 6,
+            };
+        } else if (optimizationRange === 'Last 30 Days') {
+            return {
+                totalSpend: '$24,960',
+                avgMonthly: '$1,820',
+                accounts: '3',
+                savings: '$48,600',
+                recsCount: 19,
+            };
+        }
+        // Default Last 14 Days
+        return {
+            totalSpend: '$11,174',
+            avgMonthly: '$1,315',
+            accounts: '3',
+            savings: '$23,530',
+            recsCount: 10,
+        };
+    }, [optimizationRange]);
 
     const handleUsageTypeChange = (type: string) => {
         setSelectedUsageType(type);
@@ -225,7 +267,7 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
     const [activeSpendTab, setActiveSpendTab] = useState<'WAREHOUSE' | 'QUERY PATTERN' | 'DATABASE' | 'TAGS' | 'USERS'>('WAREHOUSE');
     const [activeTrendTab, setActiveTrendTab] = useState<'SPEND TREND' | 'WAREHOUSE SPEND' | 'DATA TRANSFER' | 'STORAGE GROWTH'>('SPEND TREND');
     const [connectedIntegrations, setConnectedIntegrations] = useState<Record<string, boolean>>({});
-
+    
     const [showForecast, setShowForecast] = useState<boolean>(true);
 
     // --- State variables for the beautiful customized warehouse detail panel ---
@@ -825,8 +867,15 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
             {/* --- PAGE SCREEN HEADING --- */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-1 select-none">
                 <div>
-                    <h1 className="text-[28px] font-black text-slate-900 dark:text-white tracking-tight leading-none">Consumption</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1.5 font-sans">Monitor and analyze Snowflake account credits, storage and data transfer</p>
+                    <h1 className="text-[28px] font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                        {activePageTab === 'Account overview' ? 'Account overview' : 'Consumption'}
+                    </h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1.5 font-sans">
+                        {activePageTab === 'Account overview' 
+                            ? 'Executive-level summary of alerts, optimization metrics and database aggregates.' 
+                            : 'Monitor and analyze Snowflake account credits, storage and data transfer'
+                        }
+                    </p>
                 </div>
             </div>
 
@@ -1226,35 +1275,1000 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
 
             </div>
 
-            {/* 1.1 CREDITS DISPLAY HEADINGS & INTERACTIVE RESOURCE LEGEND (Snowflake-style) */}
-            <div className="pt-1.5">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2.5">
-                        <h1 className="text-[34px] font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans select-none">
-                            {activePrimaryMetric.value}
-                            <span className="text-[18px] font-bold text-slate-400 dark:text-slate-500 ml-1.5 font-normal tracking-wide lowercase">
-                                {activePrimaryMetric.label}
-                            </span>
-                        </h1>
-                        
-                        {/* Dynamic Label showing context filter */}
-                        <span className="text-[11px] font-black uppercase px-2 py-0.5 bg-[#5829D6]/10 text-[#5829D6] dark:text-[#818CF8] dark:bg-[#818CF8]/10 rounded-md select-none tracking-wider">
-                            {selectedDate}
+            {/* OPTIMIZATION SUMMARY BANNER/WIDGET (Account level) */}
+            <div className="bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-[24px] shadow-sm flex flex-col w-full mb-5 overflow-hidden font-sans select-none">
+                {/* 3 columns layout with thin vertical boundaries */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-150 dark:divide-slate-800 bg-transparent">
+                    {/* Column 1: TOTAL SPEND */}
+                    <div className="flex justify-between items-center p-5 bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-all duration-250 group text-left w-full cursor-pointer relative">
+                        <div className="flex flex-col h-full justify-between">
+                            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-[#8E8EA8] dark:text-[#9A9AB2] tracking-wider uppercase">
+                                    TOTAL SPEND OF THE SNOWFLAKE ORG
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#111827] dark:text-slate-100 tracking-tight leading-none font-sans">
+                                    {optimizationData.totalSpend}
+                                </span>
+                                <p className="text-[9.5px] font-medium text-slate-400 dark:text-slate-500 mt-1 leading-tight">
+                                    Year-to-date cumulative organization spend
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Column 2: AVERAGE MONTHLY SPEND */}
+                    <div className="flex justify-between items-center p-5 bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-all duration-250 group text-left w-full cursor-pointer relative">
+                        <div className="flex flex-col h-full justify-between">
+                            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-[#8E8EA8] dark:text-[#9A9AB2] tracking-wider uppercase">
+                                    AVERAGE MONTHLY SPEND
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-xl font-bold text-[#111827] dark:text-slate-100 tracking-tight leading-none font-sans">
+                                    {optimizationData.avgMonthly}
+                                </span>
+                                <p className="text-[9.5px] font-medium text-slate-400 dark:text-slate-500 mt-1 leading-tight">
+                                    Rolling average monthly standard cost pool
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Column 3: TOTAL EST SAVINGS & RECS */}
+                    <div className="flex justify-between items-center p-5 bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-all duration-250 group text-left w-full cursor-pointer relative overflow-hidden">
+                        <div className="flex flex-col h-full justify-between w-full">
+                            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-[#8E8EA8] dark:text-[#9A9AB2] tracking-wider uppercase">
+                                    TOTAL EST. SAVINGS & RECS
+                                </span>
+                                <span className="px-1.5 py-0.5 text-[8px] font-black tracking-wider rounded-md uppercase bg-purple-50 text-[#5829D6] dark:bg-purple-950/40 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 scale-90 origin-left">
+                                    {optimizationData.recsCount} RECS
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between w-full mt-0.5">
+                                <div>
+                                    <span className="text-xl font-bold text-[#6366F1] dark:text-[#A78BFA] tracking-tight leading-none font-sans">
+                                        {optimizationData.savings}
+                                    </span>
+                                    <p className="text-[9.5px] font-medium text-slate-400 dark:text-slate-500 mt-1 leading-tight">
+                                        Potential financial adjustments
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => onNavigate('Enforcement Desk')}
+                                    className="px-2.5 py-1.5 bg-[#5829D6] hover:bg-[#4d21cf] text-white text-[9.5px] font-black tracking-wider uppercase rounded-xl transition-all shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center gap-1 select-none"
+                                >
+                                    <span>View Desk</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="absolute right-1 top-2 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none pr-1">
+                            <Sparkles className="w-5 h-5 text-purple-450 dark:text-purple-500 animate-pulse" />
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        {/* SPEND TRENDS HERO SECTION WIDGET (For Account Overview page) */}
+        {activePageTab === 'Account overview' && (
+            <div id="spend-trends-hero-card" className="bg-white dark:bg-[#1F2937] p-5 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col mb-5 select-none font-sans">
+                {/* Header Row */}
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-slate-50 dark:border-slate-800 pb-4 mb-6">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                            <span>Spend Trends</span>
+                            <InfoTooltip text="Runtimes, query frequencies, storage logs, and egress data analyzed weekly with active ML prediction models." />
+                        </h2>
+                        <span className="bg-purple-100 dark:bg-purple-950/45 text-[#5829D6] dark:text-purple-300 font-extrabold uppercase rounded px-2.5 py-0.5 tracking-wider text-[9.5px] border border-purple-200/40 dark:border-purple-900/40 flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
+                            <span>Forecast Active</span>
                         </span>
+                    </div>
+
+                    {/* Tab controls capsule selector */}
+                    <div className="flex flex-wrap items-center gap-1 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {/* Tab options matching user UI */}
+                        {(['SPEND TREND', 'WAREHOUSE SPEND', 'DATA TRANSFER', 'STORAGE GROWTH'] as const).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTrendTab(tab)}
+                                className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                    activeTrendTab === tab
+                                        ? 'bg-[#5829D6] text-white shadow-xs'
+                                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/65 dark:hover:bg-slate-800/40'
+                                }`}
+                            >
+                                {tab === 'SPEND TREND' ? 'spend trend' : tab.toLowerCase()}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Chart and detailed breakdown split layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                    {/* Recharts Area / Line trends chart (Left, span 7) */}
+                    <div id="spend-trend-graph-parent" className="lg:col-span-7 flex flex-col pr-1 h-[270px] relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart 
+                                data={currentTrendChartData}
+                                margin={{ top: 10, right: 10, left: -22, bottom: 0 }}
+                            >
+                                <defs>
+                                    <linearGradient id="spendTrendGradientOverview" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#5829D6" stopOpacity={0.22} />
+                                        <stop offset="100%" stopColor="#5829D6" stopOpacity={0.00} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid 
+                                    strokeDasharray="4 4" 
+                                    vertical={false} 
+                                    stroke="#CBD5E1" 
+                                    opacity={0.3} 
+                                />
+                                <XAxis 
+                                    dataKey="name" 
+                                    strokeWidth={0}
+                                    fontSize={9}
+                                    fontFamily="monospace"
+                                    tickLine={false}
+                                    dy={5}
+                                    tickFormatter={(val) => val.replace(' (F)', '')}
+                                    className="text-slate-400 dark:text-slate-500 font-bold"
+                                />
+                                <YAxis 
+                                    strokeWidth={0}
+                                    fontSize={9}
+                                    fontFamily="monospace"
+                                    tickLine={false}
+                                    dx={-5}
+                                    tickFormatter={(val) => {
+                                        if (activeTrendTab === 'STORAGE GROWTH' || activeTrendTab === 'DATA TRANSFER') {
+                                            return `${val}G`;
+                                        }
+                                        return isCost ? `$${Math.round(val * 3).toLocaleString()}` : val.toLocaleString();
+                                    }}
+                                    className="text-slate-400 dark:text-slate-500 font-bold"
+                                />
+                                <Tooltip 
+                                    content={<SpendTrendsCustomTooltip activeTrendTab={activeTrendTab} displayMode={displayMode} />} 
+                                />
+                                
+                                {/* Ground Area actual history curve */}
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="value" 
+                                    stroke="#5829D6" 
+                                    strokeWidth={3} 
+                                    fill="url(#spendTrendGradientOverview)" 
+                                    dot={false}
+                                    activeDot={{ r: 5, fill: '#5829D6', strokeWidth: 1.5, stroke: '#FFFFFF' }}
+                                    connectNulls={false}
+                                />
+
+                                {/* Dotted projection model forecast curve */}
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="forecast" 
+                                    stroke="#5829D6" 
+                                    strokeWidth={2} 
+                                    strokeDasharray="4 4" 
+                                    fill="none" 
+                                    dot={false}
+                                    activeDot={false}
+                                    connectNulls={true}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Detailed allocation list element (Right, col span 5) */}
+                    <div id="trend-allocation-side-panel" className="lg:col-span-5 flex flex-col border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/60 lg:pl-8 pt-6 lg:pt-0 justify-between">
+                        <div>
+                            <span className="text-[10px] font-black tracking-widest text-[#8E8EA8] dark:text-slate-500 uppercase mb-5 block leading-none select-none">
+                                Spend Allocation Breakdown
+                            </span>
+
+                            {/* Breakdown row elements */}
+                            <div className="space-y-4">
+                                {/* Compute Row */}
+                                <div className="flex items-center justify-between border-b border-rose-50/10 dark:border-slate-800/40 pb-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[12.5px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                            {activeTrendTab === 'SPEND TREND' ? 'Compute Warehouse Spend' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'Batch Processing Jobs' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'Sync Pipe Execution' : 'Table Standard Logs'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 tracking-wider uppercase mt-1">
+                                            {activeTrendTab === 'SPEND TREND' ? 'QUERY PROCESSING AND INTERACTIVE JOBS' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'CORE BATCH RUNTIME AND REPORTING' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'INTER-REGION SYNC OVERHEADS' : 'STAGED COLD CACHE BUFFER'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[14px] font-extrabold text-[#5829D6] dark:text-[#A78BFA] font-sans">
+                                        {activeTrendTab === 'SPEND TREND' ? '80%' :
+                                         activeTrendTab === 'WAREHOUSE SPEND' ? '85%' :
+                                         activeTrendTab === 'DATA TRANSFER' ? '50%' : '10%'}
+                                    </span>
+                                </div>
+
+                                {/* Storage Row */}
+                                <div className="flex items-center justify-between border-b border-rose-50/10 dark:border-slate-800/40 pb-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[12.5px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                            {activeTrendTab === 'SPEND TREND' ? 'Storage Service Cost' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'Metadata Service Cost' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'Overhead Store Buffer' : 'Table Volume Storage'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 tracking-wider uppercase mt-1">
+                                            {activeTrendTab === 'SPEND TREND' ? 'DATABASE REPLICATION AND S3 SYNC TIMES' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'METADATA OPERATIONS CACHE' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'REPLICATED DATA STORE BUFFER' : 'DATABASE VOLUMES TABLE STORAGE'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[14px] font-extrabold text-[#5829D6] dark:text-[#A78BFA] font-sans">
+                                        {activeTrendTab === 'SPEND TREND' ? '15%' :
+                                         activeTrendTab === 'WAREHOUSE SPEND' ? '10%' :
+                                         activeTrendTab === 'DATA TRANSFER' ? '30%' : '75%'}
+                                    </span>
+                                </div>
+
+                                {/* Cloud Services row */}
+                                <div className="flex items-center justify-between border-b border-rose-50/10 dark:border-slate-800/40 pb-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[12.5px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                            {activeTrendTab === 'SPEND TREND' ? 'Cloud Services Credit' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'Security Services Credit' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'Bandwidth Control plane' : 'Fail-Safe Protection'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 tracking-wider uppercase mt-1">
+                                            {activeTrendTab === 'SPEND TREND' ? 'AUTHENTICATION, COMPILATION, METADATA' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'SECURITY AND IAM WORKFLOWS' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'NETWORK BANDWIDTH CONTROL PLANE' : 'FAIL-SAFE AND RECORD HISTORY'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[14px] font-extrabold text-[#5829D6] dark:text-[#A78BFA] font-sans">
+                                        {activeTrendTab === 'SPEND TREND' ? '5%' :
+                                         activeTrendTab === 'WAREHOUSE SPEND' ? '5%' :
+                                         activeTrendTab === 'DATA TRANSFER' ? '20%' : '15%'}
+                                    </span>
+                                </div>
+
+                                {/* Peak Spending row */}
+                                <div className="flex items-center justify-between border-b border-rose-50/10 dark:border-slate-800/40 pb-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[12.5px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                            {activeTrendTab === 'STORAGE GROWTH' ? 'Peak Storage size' : 'Peak Spending Day'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-rose-550 dark:text-rose-450 tracking-wider uppercase mt-1">
+                                            {activeTrendTab === 'SPEND TREND' ? 'NOV 12 - PIPELINE CRASH AND AUTO RESTART' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'OCT 31 - ETL BACKFILL JOBS TRIGGERED' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'NOV 12 - DATA REPLICATOR RESYNC OVERHEAD' : 'NOV 30 - HIGHEST RECORDED STORAGE SIZE'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[14px] font-black text-slate-900 dark:text-white font-mono">
+                                        {activeTrendTab === 'SPEND TREND' ? (isCost ? '$5,220' : '1,740 cr') :
+                                         activeTrendTab === 'WAREHOUSE SPEND' ? (isCost ? '$4,140' : '1,380 cr') :
+                                         activeTrendTab === 'DATA TRANSFER' ? '195 GB' : '1,840 GB'}
+                                    </span>
+                                </div>
+
+                                {/* Average historical row */}
+                                <div className="flex items-center justify-between last:border-b-0 pb-1">
+                                    <div className="flex flex-col">
+                                        <span className="text-[12.5px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                            {activeTrendTab === 'STORAGE GROWTH' ? 'Average Storage size' : 'Average Historical Spend'}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-450 tracking-wider uppercase mt-1">
+                                            {activeTrendTab === 'SPEND TREND' ? 'STEADY PRODUCTION WORKLOADS METRIC' :
+                                             activeTrendTab === 'WAREHOUSE SPEND' ? 'SYSTEM STANDARD AVERAGE LIMIT' :
+                                             activeTrendTab === 'DATA TRANSFER' ? 'DAILY TRANSFER METRIC EXPECTED' : 'HISTORICAL DATABASE GROWTH TREND'}
+                                        </span>
+                                    </div>
+                                    <span className="text-[14px] font-black text-slate-900 dark:text-white font-mono">
+                                        {activeTrendTab === 'SPEND TREND' ? (isCost ? '$2,850' : '950 cr') :
+                                         activeTrendTab === 'WAREHOUSE SPEND' ? (isCost ? '$2,400' : '800 cr') :
+                                         activeTrendTab === 'DATA TRANSFER' ? '160 GB' : '1,250 GB'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Summation Row */}
+                        <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-6 h-9">
+                            <span className="text-[10px] font-black tracking-wider text-[#8E8EA8] dark:text-slate-500 uppercase">
+                                {activeTrendTab === 'SPEND TREND' || activeTrendTab === 'WAREHOUSE SPEND' ? 'Total Period Spend:' :
+                                 activeTrendTab === 'DATA TRANSFER' ? 'Total Transferred:' : 'Total Combined Size:'}
+                            </span>
+                            <span className="text-[15px] font-black text-slate-900 dark:text-white uppercase font-sans">
+                                {activeTrendTab === 'SPEND TREND' ? (isCost ? '$144,294' : '48,098 cr') :
+                                 activeTrendTab === 'WAREHOUSE SPEND' ? (isCost ? '$115,200' : '38,400 cr') :
+                                 activeTrendTab === 'DATA TRANSFER' ? '5,420 GB' : '2,880 GB'}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
+        )}
 
-            {/* 4. TOP WORKLOAD SPEND CARD */}
-            <div className="bg-white dark:bg-[#1F2937] p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <div>
-                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">TOP WORKLOAD SPEND - {selectedUsageType.toUpperCase()} Domain</span>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Stacked visualization of resource coordinates in real-time</p>
+            {/* TOP SPEND BY CATEGORY WIDGET (For Account Overview page) */}
+            {activePageTab === 'Account overview' && (
+                <div id="top-spend-by-category-card" className="bg-white dark:bg-[#1F2937] p-5 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col mb-5 select-none font-sans">
+                    {/* Header Row */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-50 dark:border-slate-800 pb-4 mb-6">
+                        <div>
+                            <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                                Top Spend by Category
+                            </h2>
+                            <p className="text-[11px] text-slate-450 dark:text-slate-400 mt-0.5">
+                                Resource consumption and credit metrics across system categories
+                            </p>
+                        </div>
+                        
+                        {/* Custom visual tab capsule */}
+                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-100 dark:border-slate-850">
+                            {(['WAREHOUSE', 'QUERY PATTERN', 'DATABASE', 'TAGS', 'USERS'] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveSpendTab(tab)}
+                                    className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                        activeSpendTab === tab
+                                            ? 'bg-[#5829D6] text-white shadow-xs'
+                                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/65 dark:hover:bg-slate-800/40'
+                                    }`}
+                                >
+                                    {tab === 'QUERY PATTERN' ? 'Query Pattern' : tab.toLowerCase()}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Micro Search Input for filtering the current table */}
-                    <div className="relative w-full sm:w-60">
+                    {/* Chart & Table columns split */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Left Column: Horizontal Bar Chart of Top 5 */}
+                        <div id="horizontal-bar-graph-panel" className="lg:col-span-5 flex flex-col relative py-4 pr-2 pl-4">
+                            {/* Faint dotted coordinate guidelines in background */}
+                            <div className="absolute inset-0 left-28 right-0 flex justify-between pointer-events-none select-none z-0">
+                                <div className="h-[200px] border-r border-dashed border-slate-100 dark:border-slate-850/50" />
+                                <div className="h-[200px] border-r border-dashed border-slate-100 dark:border-slate-850/50" />
+                                <div className="h-[200px] border-r border-dashed border-slate-100 dark:border-slate-850/50" />
+                                <div className="h-[200px] border-r border-dashed border-slate-100 dark:border-slate-850/50" />
+                                <div className="h-[200px] border-r border-dashed border-slate-100 dark:border-slate-850/50" />
+                            </div>
+
+                            {/* Outer container list of items */}
+                            <div className="space-y-6 relative z-10">
+                                {activeSpendData.items.map((item, index) => {
+                                    // Calculate responsive width percentage
+                                    const maxVal = Math.max(...activeSpendData.items.map(i => i.credits));
+                                    const barWidthPercentage = `${(item.credits / maxVal) * 105}%`; // scaled slightly for visuals
+                                    
+                                    // Rank-specific sequential color schemes matching the purple gradient scale
+                                    const fillColors = [
+                                        'bg-[#5829D6] dark:bg-[#7C3AED]',
+                                        'bg-[#7C3AED] dark:bg-[#8B5CF6]',
+                                        'bg-[#9333EA] dark:bg-[#A78BFA]',
+                                        'bg-[#A855F7] dark:bg-[#C084FC]',
+                                        'bg-[#C084FC] dark:bg-[#DDD6FE]'
+                                    ];
+
+                                    return (
+                                        <div key={item.name} className="flex items-center w-full">
+                                            {/* Item Label (Left, right-aligned) */}
+                                            <div className="w-28 text-right pr-4 text-[11px] font-extrabold text-slate-800 dark:text-slate-200 truncate select-none" title={item.name}>
+                                                {item.name}
+                                            </div>
+                                            
+                                            {/* Bar capsule */}
+                                            <div className="flex-1 h-3.5 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center shadow-inner relative">
+                                                <div 
+                                                    className={`h-full ${fillColors[index] || fillColors[fillColors.length - 1]} rounded-full transition-all duration-500 ease-out`} 
+                                                    style={{ width: barWidthPercentage }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* X-Axis labels at the bottom */}
+                            <div className="flex justify-between items-center mt-4 pl-28 text-[9px] font-mono text-slate-400 dark:text-slate-500 select-none">
+                                {activeSpendTab === 'WAREHOUSE' && (
+                                    <>
+                                        <span>0</span>
+                                        <span>950</span>
+                                        <span>1.9K</span>
+                                        <span>2.9K</span>
+                                        <span>3.8K</span>
+                                    </>
+                                )}
+                                {activeSpendTab === 'QUERY PATTERN' && (
+                                    <>
+                                        <span>0</span>
+                                        <span>1.0K</span>
+                                        <span>2.1K</span>
+                                        <span>3.1K</span>
+                                        <span>4.2K</span>
+                                    </>
+                                )}
+                                {activeSpendTab === 'DATABASE' && (
+                                    <>
+                                        <span>0</span>
+                                        <span>1.2K</span>
+                                        <span>2.5K</span>
+                                        <span>3.8K</span>
+                                        <span>5.1K</span>
+                                    </>
+                                )}
+                                {activeSpendTab === 'TAGS' && (
+                                    <>
+                                        <span>0</span>
+                                        <span>1.2K</span>
+                                        <span>2.4K</span>
+                                        <span>3.6K</span>
+                                        <span>4.8K</span>
+                                    </>
+                                )}
+                                {activeSpendTab === 'USERS' && (
+                                    <>
+                                        <span>0</span>
+                                        <span>1.1K</span>
+                                        <span>2.3K</span>
+                                        <span>3.4K</span>
+                                        <span>4.6K</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Detailed allocation table */}
+                        <div id="allocation-details-table" className="lg:col-span-7 flex flex-col border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/60 lg:pl-8 pt-6 lg:pt-0">
+                            <span className="text-[10px] font-black tracking-widest text-[#8E8EA8] dark:text-slate-550 uppercase mb-4 block leading-none">
+                                Detailed Allocation (Top 5)
+                            </span>
+
+                            {/* List layout of the 5 detailed rankings */}
+                            <div className="space-y-3.5 flex-grow">
+                                {activeSpendData.items.map((item) => (
+                                    <div 
+                                        key={item.name} 
+                                        className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800/40 pb-3 last:border-b-0"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span 
+                                                onClick={() => handleRowClick(item.name)}
+                                                className="text-[12px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight hover:text-[#5829D6] dark:hover:text-[#A78BFA] cursor-pointer transition-colors"
+                                            >
+                                                {item.name}
+                                            </span>
+                                            <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase mt-0.5">
+                                                {item.rank}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-5">
+                                            <div className="flex flex-col text-right">
+                                                <span className="text-[12px] font-black text-slate-850 dark:text-slate-55 flex items-baseline gap-0.5 justify-end">
+                                                    {item.credits.toLocaleString()} <span className="text-[10px] font-bold text-slate-450">cr</span>
+                                                </span>
+                                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                                    {item.percentage}%
+                                                </span>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleRowClick(item.name)}
+                                                className="text-[9.5px] font-black text-[#5829D6] dark:text-[#A78BFA] hover:text-[#4d21cf] dark:hover:text-purple-300 cursor-pointer bg-slate-50 dark:bg-slate-900/60 hover:bg-[#5829D6]/10 px-3 py-1.5 rounded-lg border border-slate-150 dark:border-slate-800 transition-colors uppercase tracking-wider select-none shrink-0"
+                                            >
+                                                Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Total Bottom Row Summary */}
+                            <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-4 h-9">
+                                <span className="text-[10px] font-black tracking-wider text-slate-450 dark:text-slate-550 uppercase">
+                                    Total category spend shown:
+                                </span>
+                                <span className="text-[14px] font-black text-slate-900 dark:text-white uppercase font-sans">
+                                    {activeSpendData.totalShown}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
+            {/* DYNAMIC COST AND CONSUMPTION ANALYSIS DASHBOARD WIDGETS */}
+            {activePageTab === 'Consumption' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                    {/* 1. COST SUMMARY */}
+                    <div className="bg-white dark:bg-[#1f2937] border border-slate-150 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-[145px] hover:shadow-sm transition-all duration-200">
+                        <div>
+                            <span className="text-[11px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-2">
+                                Cost summary
+                            </span>
+                            <div className="flex items-center gap-2.5 mt-2.5">
+                                <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-50 font-sans tracking-tight">
+                                    25.2
+                                </span>
+                                <span className="text-[9.5px] font-black tracking-wider uppercase px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded border border-slate-200/40 dark:border-slate-700/50">
+                                    No prior data
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-[11px] font-bold text-slate-440 dark:text-slate-500 mt-4 font-mono">
+                            MTD · Avg. 0.9 credits/day
+                        </div>
+                    </div>
+
+                    {/* 2. MONTHLY BUDGET UTILIZATION */}
+                    <div className="bg-white dark:bg-[#1f2937] border border-slate-150 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-[145px] hover:shadow-sm transition-all duration-200">
+                        <div>
+                            <span className="text-[11px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-2">
+                                Monthly budget utilization
+                            </span>
+                            
+                            {!budgetActivated ? (
+                                <div className="flex flex-col items-center justify-center py-1.5">
+                                    <span className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-2">
+                                        No budget set
+                                    </span>
+                                    <button
+                                        onClick={() => setBudgetActivated(true)}
+                                        className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-800/80 px-3.5 py-1 rounded-xl border border-slate-200 dark:border-slate-750 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-xs cursor-pointer select-none"
+                                    >
+                                        Activate budget
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col py-1">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <span className="text-xs font-extrabold text-slate-850 dark:text-white">84% used</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">25.2 / {budgetLimit}.0 credits</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1.5">
+                                        <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full animate-pulse" style={{ width: '84%' }} />
+                                    </div>
+                                    <button 
+                                        onClick={() => setBudgetActivated(false)}
+                                        className="text-[9.5px] font-bold text-rose-500 hover:text-rose-600 underline text-left cursor-pointer"
+                                    >
+                                        Deactivate budget
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                setAiTipMessage(
+                                    aiTipMessage === "budget" 
+                                    ? null 
+                                    : "Snowflake Budgets monitor credit spend across the account. You can create account-level budgets, or customize specific resource budgets using SQL triggers."
+                                );
+                            }}
+                            className={`w-fit mt-1.5 flex items-center gap-1.5 px-2.5 py-1 text-[9.5px] font-extrabold tracking-wider rounded-lg border cursor-pointer transition-all ${
+                                aiTipMessage === "budget"
+                                ? "bg-purple-100 dark:bg-purple-950/40 text-[#5829D6] dark:text-purple-300 border-purple-200 dark:border-purple-900/40"
+                                : "bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-800/20 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-slate-800"
+                            }`}
+                        >
+                            <Sparkles className="w-2.5 h-2.5 text-purple-500 dark:text-purple-400" />
+                            <span>How can I set up a budget?</span>
+                        </button>
+                    </div>
+
+                    {/* 3. ANOMALIES */}
+                    <div className="bg-white dark:bg-[#1f2937] border border-slate-150 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-[145px] hover:shadow-sm transition-all duration-200">
+                        <div>
+                            <span className="text-[11px] font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider block mb-2">
+                                Anomalies
+                            </span>
+                            <div className="flex flex-col items-center justify-center text-center py-2">
+                                <span className="text-[11.5px] font-bold text-slate-400 dark:text-slate-500 leading-normal max-w-[190px]">
+                                    Your current role cannot access this feature.
+                                </span>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => setRolesExplanationOpen(!rolesExplanationOpen)}
+                            className="text-[10px] font-bold text-[#5829D6] dark:text-[#A78BFA] hover:underline cursor-pointer text-left w-fit"
+                        >
+                            Learn more about roles
+                        </button>
+                    </div>
+
+                    {/* 4. OPTIMIZATION INSIGHTS */}
+                    <div className="bg-white dark:bg-[#1f2937] border border-slate-150 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-[145px] hover:shadow-sm transition-all duration-200">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[11px] font-bold text-slate-455 dark:text-slate-400 uppercase tracking-wider">
+                                        Optimization insights
+                                    </span>
+                                    <InfoTooltip text="Automated consumption optimization queries and warehouse autosuspend rules parsed by the AI direct agent." position="top" />
+                                </div>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-3 text-emerald-600 dark:text-emerald-400">
+                                <Check className="w-4 h-4" />
+                                <span className="text-xs font-bold font-sans">
+                                    You are all optimized!
+                                </span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                setAiTipMessage(
+                                    aiTipMessage === "optimize"
+                                    ? null
+                                    : "Your organization warehouses and databases are evaluated dynamically. Active auto-suspend guidelines are already configured inside the Enforcement Desk."
+                                );
+                            }}
+                            className={`w-fit mt-1.5 flex items-center gap-1.5 px-2.5 py-1 text-[9.5px] font-extrabold tracking-wider rounded-lg border cursor-pointer transition-all ${
+                                aiTipMessage === "optimize"
+                                ? "bg-purple-100 dark:bg-purple-950/40 text-[#5829D6] dark:text-purple-300 border-purple-200 dark:border-purple-900/40"
+                                : "bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-800/20 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-slate-800"
+                            }`}
+                        >
+                            <Sparkles className="w-2.5 h-2.5 text-purple-500 dark:text-purple-400" />
+                            <span>How can I optimize my spending?</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* EXPANDED INLINE AI HELP MSG */}
+            {aiTipMessage && (
+                <div className="bg-purple-50/50 dark:bg-[#5829D6]/10 border border-purple-100/50 dark:border-[#5829D6]/30 p-4 rounded-xl text-xs text-slate-705 dark:text-purple-200 font-medium mb-5 shadow-xs flex items-start gap-2.5 animate-in slide-in-from-top duration-200">
+                    <Sparkles className="w-4 h-4 text-[#5829D6] dark:text-[#A78BFA] flex-shrink-0 mt-0.5 animate-pulse" />
+                    <div className="flex-grow">
+                        <span className="font-extrabold text-[#5829D6] dark:text-[#A78BFA] block mb-0.5 uppercase text-[10px] tracking-wider">AI Direct Platform Advisory</span>
+                        <p>{aiTipMessage}</p>
+                    </div>
+                    <button onClick={() => setAiTipMessage(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer font-bold">✕</button>
+                </div>
+            )}
+
+            {/* EXPANDED ROLES MODAL SYSTEM */}
+            {rolesExplanationOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-900/55 dark:bg-black/60 backdrop-blur-xs" onClick={() => setRolesExplanationOpen(false)} />
+                    <div className="bg-white dark:bg-[#1F2937] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-md w-full relative z-10 animate-in zoom-in-95 duration-200 select-none font-sans">
+                        <button 
+                            onClick={() => setRolesExplanationOpen(false)}
+                            className="absolute right-4.5 top-4.5 text-slate-405 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900"
+                        >
+                            ✕
+                        </button>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">Snowflake Security & Role Management</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                            Snowflake manages critical optimization features and cost alerts using role-based access control (RBAC). 
+                        </p>
+                        <div className="space-y-2.5 mb-5">
+                            <div className="p-2.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/50 dark:border-purple-900/40 text-left">
+                                <span className="font-extrabold text-xs text-[#5829D6] dark:text-purple-300 block">ORGADMIN</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Manages organization-wide billing and global multi-region account structures.</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 text-left">
+                                <span className="font-extrabold text-xs text-slate-700 dark:text-slate-300 block">ACCOUNTADMIN</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Full account authority, configuring Resource Monitors and Budgets.</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 text-left opacity-60">
+                                <span className="font-extrabold text-xs text-slate-700 dark:text-slate-300 block">SYSADMIN / OTHER ROLES</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">Authorized to create tables, compute warehouses, but blocked from parent alerts.</span>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setRolesExplanationOpen(false)}
+                            className="bg-[#5829D6] hover:bg-[#4d21cf] text-white text-xs font-bold py-2.5 w-full rounded-xl transition-all shadow-md cursor-pointer uppercase tracking-wider"
+                        >
+                            Understood
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 4. TOP WORKLOAD SPEND GRAPH CARD */}
+            {activePageTab === 'Consumption' && (
+                <div className="bg-white dark:bg-[#1F2937] p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col mb-5">
+                    {/* Visual stacked bars chart */}
+                    <div className="relative h-[240px] w-full">
+                        {activeWorkloadChartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart 
+                                    data={activeWorkloadChartData} 
+                                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2DDEB" opacity={0.3} />
+                                    <XAxis dataKey="name" stroke="#9A9AB2" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: '#9A9AB2', fontSize: 10, fontWeight: 500 }} />
+                                    <YAxis 
+                                        stroke="#9A9AB2" 
+                                        fontSize={10} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        tick={{ fill: '#9A9AB2', fontSize: 10, fontWeight: 500 }} 
+                                        domain={workloadChartConfig.domain} 
+                                        ticks={workloadChartConfig.ticks}
+                                        tickFormatter={(val) => {
+                                            if (selectedUsageType === 'All') return `$${val}`;
+                                            if (selectedUsageType === 'Storage') return `${val}G`;
+                                            if (selectedUsageType === 'Data Transfer') return `${val}M`;
+                                            return `${val}`;
+                                        }}
+                                    />
+                                    <Tooltip cursor={{ fill: 'rgba(88, 41, 114, 0.02)' }} />
+                                    
+                                    {workloadChartConfig.bars.map((bar, index) => (
+                                        <Bar 
+                                            key={bar.key}
+                                            dataKey={bar.key} 
+                                            stackId="a" 
+                                            fill={bar.color} 
+                                            barSize={14} 
+                                            radius={index === workloadChartConfig.bars.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+                                            className="cursor-pointer hover:opacity-80 transition-all duration-200"
+                                        />
+                                    ))}
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/10 p-6">
+                                <Cloud className="w-10 h-10 text-slate-300 dark:text-slate-650 animate-pulse mb-2" />
+                                <span className="text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest text-center">No Data Graph Coordinates</span>
+                                <p className="text-[11px] text-slate-400 mt-1 max-w-[280px] text-center">Try resetting search filters or matching other Snowflake region endpoints.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Interactive Legend for categories */}
+                    {activeWorkloadChartData.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-4 mt-3 justify-center text-[10px] font-black text-slate-455 dark:text-slate-500 tracking-wider select-none">
+                            {workloadChartConfig.bars.map(bar => (
+                                <div key={bar.key} className="flex items-center gap-1.5">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bar.color }} />
+                                    <span>{bar.name.toUpperCase()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* 5. TOP WORKLOAD COST BREAKDOWN TABLE CARD */}
+            {activePageTab === 'Consumption' && (
+                <div className="bg-white dark:bg-[#1F2937] p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col">
+                {/* Dynamic Table Toolbar Component */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-3 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-850 -mx-4 sm:-mx-5 -mt-4 sm:-mt-5 mb-5 px-4 sm:px-5 rounded-t-2xl">
+                    {/* Left filters layout */}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {/* Domain indicator tab/pill */}
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-wider select-none border border-slate-200/40 dark:border-slate-700/50">
+                            <span>Domain:</span>
+                            <span className="text-[#5829D6] dark:text-[#818CF8] font-black">{selectedUsageType}</span>
+                        </div>
+
+                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-750 hidden md:block" />
+
+                        {/* Domain-specific sub-filters */}
+                        {selectedUsageType === 'Compute' && (
+                            <>
+                                {/* Resource filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'resource' ? null : 'resource')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">Resource:</span>
+                                        <span className="truncate max-w-[120px] text-[#5829D6] dark:text-[#818CF8]">{selectedResource}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'resource' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'resource' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-60 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 max-h-[250px] overflow-y-auto animate-in fade-in duration-150">
+                                                {RESOURCES_LIST.map((r) => (
+                                                    <button
+                                                        key={r.name}
+                                                        onClick={() => {
+                                                            setSelectedResource(r.name);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span className="truncate">{r.name}</span>
+                                                        {selectedResource === r.name && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0 border-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Service filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'service' ? null : 'service')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">Service:</span>
+                                        <span className="text-[#5829D6] dark:text-[#818CF8]">{selectedServiceType}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'service' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'service' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in duration-150">
+                                                {SERVICE_TYPES.map((t) => (
+                                                    <button
+                                                        key={t}
+                                                        onClick={() => {
+                                                            setSelectedServiceType(t);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span>{t}</span>
+                                                        {selectedServiceType === t && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Tag filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'tag' ? null : 'tag')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">Tag:</span>
+                                        <span className="truncate max-w-[110px] text-[#5829D6] dark:text-[#818CF8]">{selectedTag}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'tag' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'tag' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-52 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in duration-150">
+                                                {TAG_LIST.map((tag) => (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => {
+                                                            setSelectedTag(tag);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span className="truncate text-ellipsis overflow-hidden whitespace-nowrap">{tag}</span>
+                                                        {selectedTag === tag && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {selectedUsageType === 'Storage' && (
+                            <>
+                                {/* Object filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'object' ? null : 'object')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">ObjectType:</span>
+                                        <span className="text-[#5829D6] dark:text-[#818CF8]">{selectedObject}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'object' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'object' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in duration-150">
+                                                {OBJECTS_LIST.map((o) => (
+                                                    <button
+                                                        key={o}
+                                                        onClick={() => {
+                                                            setSelectedObject(o);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span>{o}</span>
+                                                        {selectedObject === o && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Tag filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'tag' ? null : 'tag')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">Tag:</span>
+                                        <span className="truncate max-w-[110px] text-[#5829D6] dark:text-[#818CF8]">{selectedTag}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'tag' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'tag' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-52 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in duration-150">
+                                                {TAG_LIST.map((tag) => (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => {
+                                                            setSelectedTag(tag);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span className="truncate text-ellipsis overflow-hidden whitespace-nowrap">{tag}</span>
+                                                        {selectedTag === tag && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {(selectedUsageType === 'Data Transfer' || selectedUsageType === 'All') && (
+                            <>
+                                {/* Region filter selector */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTableDropdownOpen(tableDropdownOpen === 'region' ? null : 'region')}
+                                        className="bg-white hover:bg-slate-50 dark:bg-[#111827] dark:hover:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-705 dark:text-slate-350 shadow-xs transition-colors"
+                                    >
+                                        <span className="text-slate-400 font-normal">Region:</span>
+                                        <span className="text-[#5829D6] dark:text-[#818CF8]">{selectedRegion}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${tableDropdownOpen === 'region' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {tableDropdownOpen === 'region' && (
+                                        <>
+                                            <div className="fixed inset-0 z-45" onClick={() => setTableDropdownOpen(null)} />
+                                            <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-[#1F2937] border border-slate-150 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in duration-150">
+                                                {REGIONS_LIST.map((r) => (
+                                                    <button
+                                                        key={r}
+                                                        onClick={() => {
+                                                            setSelectedRegion(r);
+                                                            setTableDropdownOpen(null);
+                                                        }}
+                                                        className="w-full text-left px-3.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between cursor-pointer"
+                                                    >
+                                                        <span>{r}</span>
+                                                        {selectedRegion === r && <Check className="w-3.5 h-3.5 text-[#5829D6] dark:text-purple-400 shrink-0" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Right search bar segment inside toolbar */}
+                    <div className="relative w-full md:w-60">
                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                         <input 
                             type="text"
@@ -1274,69 +2288,8 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
                     </div>
                 </div>
 
-                {/* Visual stacked bars chart */}
-                <div className="h-[210px] w-full">
-                    {activeWorkloadChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart 
-                                data={activeWorkloadChartData} 
-                                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2DDEB" opacity={0.3} />
-                                <XAxis dataKey="name" stroke="#9A9AB2" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: '#9A9AB2', fontSize: 10, fontWeight: 500 }} />
-                                <YAxis 
-                                    stroke="#9A9AB2" 
-                                    fontSize={10} 
-                                    tickLine={false} 
-                                    axisLine={false} 
-                                    tick={{ fill: '#9A9AB2', fontSize: 10, fontWeight: 500 }} 
-                                    domain={workloadChartConfig.domain} 
-                                    ticks={workloadChartConfig.ticks}
-                                    tickFormatter={(val) => {
-                                        if (selectedUsageType === 'All') return `$${val}`;
-                                        if (selectedUsageType === 'Storage') return `${val}G`;
-                                        if (selectedUsageType === 'Data Transfer') return `${val}M`;
-                                        return `${val}`;
-                                    }}
-                                />
-                                <Tooltip cursor={{ fill: 'rgba(88, 41, 114, 0.02)' }} />
-                                
-                                {workloadChartConfig.bars.map((bar, index) => (
-                                    <Bar 
-                                        key={bar.key}
-                                        dataKey={bar.key} 
-                                        stackId="a" 
-                                        fill={bar.color} 
-                                        barSize={14} 
-                                        radius={index === workloadChartConfig.bars.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
-                                        className="cursor-pointer hover:opacity-80 transition-all duration-200"
-                                    />
-                                ))}
-                            </BarChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/10 p-6">
-                            <Cloud className="w-10 h-10 text-slate-300 dark:text-slate-650 animate-pulse mb-2" />
-                            <span className="text-xs font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest text-center">No Data Graph Coordinates</span>
-                            <p className="text-[11px] text-slate-400 mt-1 max-w-[280px] text-center">Try resetting search filters or matching other Snowflake region endpoints.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Interactive Legend for categories */}
-                {activeWorkloadChartData.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-4 mt-3 justify-center text-[10px] font-black text-slate-455 dark:text-slate-500 tracking-wider select-none">
-                        {workloadChartConfig.bars.map(bar => (
-                            <div key={bar.key} className="flex items-center gap-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bar.color }} />
-                                <span>{bar.name.toUpperCase()}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
                 {/* Table list below (using React Key for slick CSS switch transitions) */}
-                <div key={selectedUsageType} className="mt-4 border-t border-slate-150/50 dark:border-slate-800/60 pt-4 overflow-x-auto animate-in fade-in duration-300">
+                <div key={selectedUsageType} className="overflow-x-auto animate-in fade-in duration-300">
                     
                     {/* Compute: Secondary detail query logs view if single resource is selected */}
                     {selectedUsageType === 'Compute' && selectedResource !== 'All Resources' ? (
@@ -1967,8 +2920,6 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
                                             <thead>
                                                 <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider pb-2">
                                                     <th className="pb-2 font-black">START TIME (UTC)</th>
-                                                    <th className="pb-2 font-black">REGION</th>
-                                                    <th className="pb-2 font-black">SERVICE LEVEL</th>
                                                     <th className="pb-2 font-black">COST</th>
                                                     <th className="pb-2 text-right font-black">USAGE TYPE</th>
                                                 </tr>
@@ -1978,12 +2929,6 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
                                                     return (
                                                         <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/20 transition-colors text-[12px] font-medium font-sans">
                                                             <td className="py-2.5 font-bold text-slate-700 dark:text-slate-350 font-mono">{item.startTime}</td>
-                                                            <td className="py-2.5 text-[#5829D6] dark:text-[#818CF8] font-bold font-mono">{item.region}</td>
-                                                            <td className="py-2.5">
-                                                                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                                                                    {item.serviceLevel}
-                                                                </span>
-                                                            </td>
                                                             <td className="py-2.5 text-slate-900 dark:text-slate-100 font-extrabold text-[13px] font-mono">${item.cost.toLocaleString()}</td>
                                                             <td className="py-2.5 text-right">
                                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider ${
@@ -2012,6 +2957,7 @@ const AccountOverviewDashboard: React.FC<AccountOverviewDashboardProps> = ({ acc
 
                 </div>
             </div>
+        )}
 
 
         </div>

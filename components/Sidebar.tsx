@@ -141,8 +141,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, isOpen, on
     const filteredTopItems = useMemo(() => {
         return NAV_ITEMS_TOP.map(item => {
             let updatedItem = { ...item };
-            if (updatedItem.name === 'AI data cloud overview' && hasAccounts) {
-                return { ...updatedItem, name: 'AI data cloud overview' as Page };
+            if (updatedItem.name === 'Cost Intelligence' && hasAccounts) {
+                return { ...updatedItem, name: 'Cost Intelligence' as Page };
             }
             return updatedItem;
         });

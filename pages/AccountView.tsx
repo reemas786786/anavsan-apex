@@ -541,6 +541,16 @@ const AccountView: React.FC<AccountViewProps> = ({ account, accounts, onSwitchAc
                     onSelectWarehouse={setSelectedWarehouse}
                     onSelectQuery={setSelectedQuery}
                     displayMode={displayMode}
+                    activePageTab="Account overview"
+                />;
+            case 'Consumption':
+                return <AccountOverviewDashboard 
+                    account={account} 
+                    onNavigate={handleSidebarPageChange} 
+                    onSelectWarehouse={setSelectedWarehouse}
+                    onSelectQuery={setSelectedQuery}
+                    displayMode={displayMode}
+                    activePageTab="Consumption"
                 />;
             case 'Enforcement Desk':
                 return <Recommendations 
